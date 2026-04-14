@@ -1,5 +1,5 @@
 const { createTaskSchema, updateTaskSchema } = require('../validators/taskValidator');
-const { createTaskService } = require('../services/taskService');
+const { createTaskService, getAllTasksService } = require('../services/taskService');
 
 async function createTaskController(req, res) {
     const data = req.body;
@@ -16,6 +16,19 @@ async function createTaskController(req, res) {
     }
 }
 
+async function getAllTasksController(req, res) {
+    try {
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 5;
+        const filters = { user: req.user.userId };
+        const tasks = await getAllTasksService(page, limit, filters);
+        res.json(tasks);
+    } catch (err) {
+        res.status(err.status || 500).json(err.message || "Internal server Error");
+    }
+}
+
 module.exports = {
-    createTaskController
+    createTaskController,
+    getAllTasksController
 };

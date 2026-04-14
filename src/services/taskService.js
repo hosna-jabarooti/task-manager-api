@@ -6,6 +6,25 @@ async function createTaskService(newTask) {
     return await Task.create(newTask);
 }
 
-module.exports ={
-    createTaskService
+async function getAllTasksService(page, limit, filters) {
+    const skip = (page - 1) * limit;
+    const tasks = await Task.find(filters).skip(skip).lean();
+    if(!tasks.length) throw {status: 404, message: "No task exists"};
+
+    const total = await Task.countDocuments(filters);
+
+    return {
+        data: tasks,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
+}
+
+module.exports = {
+    createTaskService,
+    getAllTasksService
 }
