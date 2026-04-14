@@ -1,5 +1,8 @@
+const mongoose = require('mongoose');
 const { createTaskSchema, updateTaskSchema } = require('../validators/taskValidator');
-const { createTaskService, getAllTasksService } = require('../services/taskService');
+const { createTaskService, getAllTasksService,
+    getTaskByIdService
+} = require('../services/taskService');
 
 async function createTaskController(req, res) {
     const data = req.body;
@@ -28,7 +31,24 @@ async function getAllTasksController(req, res) {
     }
 }
 
+async function getTaskbyIdController(req, res) {
+    try {
+        const taskId = req.params.id;
+        const userId = req.user.userId;
+        if (!mongoose.Types.ObjectId.isValid(taskId)) {
+            const err = new Error("Invalid product id format");
+            err.status = 400;
+            throw err;
+        }
+        const result = await getTaskByIdService(taskId, userId);
+        if (!result) throw { status: 404, message: "no such product exists!" };
+        res.json(result);
+    } catch (err) {
+        res.status(err.status || 500).json(err.message || "Internal server Error");
+    }
+}
 module.exports = {
     createTaskController,
-    getAllTasksController
+    getAllTasksController,
+    getTaskbyIdController
 };

@@ -24,7 +24,13 @@ async function getAllTasksService(page, limit, filters) {
     };
 }
 
+async function getTaskByIdService(taskId, userId) {
+    const task = await Task.findById(taskId).lean();
+    if(task.user.toString() !== userId) throw {status: 403, message: "No access!"};
+    return task;
+}
 module.exports = {
     createTaskService,
-    getAllTasksService
+    getAllTasksService,
+    getTaskByIdService
 }
