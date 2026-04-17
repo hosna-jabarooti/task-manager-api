@@ -1,18 +1,19 @@
 const mongoose = require('mongoose');
 const { createTaskSchema, updateTaskSchema } = require('../validators/taskValidator');
 const { createTaskService, getAllTasksService,
-    getTaskByIdService
+    getTaskByIdService, updateTaskByIdService
 } = require('../services/taskService');
 
 async function createTaskController(req, res) {
     const data = req.body;
-    data.user = req.user.userId;
     try {
+        if (!data) throw { status: 400, message: "empty data" };
+        data.user = req.user.userId;
         const { error } = createTaskSchema.validate(data);
         if (error)
             return res.status(400).json({ message: error.details[0].message });
 
-        const newTask = await createTaskService(data);
+        await createTaskService(data);
         res.status(201).json({ message: "new task created successfully!" });
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
@@ -31,18 +32,39 @@ async function getAllTasksController(req, res) {
     }
 }
 
-async function getTaskbyIdController(req, res) {
+async function getTaskByIdController(req, res) {
     try {
         const taskId = req.params.id;
         const userId = req.user.userId;
         if (!mongoose.Types.ObjectId.isValid(taskId)) {
-            const err = new Error("Invalid product id format");
+            const err = new Error("Invalid task id format");
             err.status = 400;
             throw err;
         }
-        const result = await getTaskByIdService(taskId, userId);
-        if (!result) throw { status: 404, message: "no such product exists!" };
+        const result = await getTaskByIdService(taskId);
+        if (result.user.toString() !== userId) throw { status: 403, message: "No Access!" };
         res.json(result);
+    } catch (err) {
+        res.status(err.status || 500).json(err.message || "Internal server Error");
+    }
+}
+
+async function updateTaskByIdController(req, res) {
+    const data = req.body;
+    try {
+        if (!data || !Object.keys(data).length) throw { status: 400, message: "empty data" };
+        data.user = req.user.userId;
+        const { error } = updateTaskSchema.validate(data);
+        if (error)
+            return res.status(400).json({ message: error.details[0].message });
+        const taskId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(taskId)) {
+            const err = new Error("Invalid task id format");
+            err.status = 400;
+            throw err;
+        }
+        await updateTaskByIdService(taskId, data);
+        res.json("the task updated successfully");
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
     }
@@ -50,5 +72,6 @@ async function getTaskbyIdController(req, res) {
 module.exports = {
     createTaskController,
     getAllTasksController,
-    getTaskbyIdController
+    getTaskByIdController,
+    updateTaskByIdController
 };

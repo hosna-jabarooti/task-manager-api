@@ -9,7 +9,7 @@ async function createTaskService(newTask) {
 async function getAllTasksService(page, limit, filters) {
     const skip = (page - 1) * limit;
     const tasks = await Task.find(filters).skip(skip).lean();
-    if(!tasks.length) throw {status: 404, message: "No task exists"};
+    if (!tasks.length) throw { status: 404, message: "No task exists" };
 
     const total = await Task.countDocuments(filters);
 
@@ -24,13 +24,28 @@ async function getAllTasksService(page, limit, filters) {
     };
 }
 
-async function getTaskByIdService(taskId, userId) {
+async function getTaskByIdService(taskId) {
     const task = await Task.findById(taskId).lean();
-    if(task.user.toString() !== userId) throw {status: 403, message: "No access!"};
+    if (!task) throw { status: 404, message: "no such product exists!" };
     return task;
 }
+
+async function updateTaskByIdService(taskId, data) {
+    const existing = await Task.findById(taskId).lean();
+    if (!existing) throw { status: 404, message: "No such product exists" };
+    const updated = await Task.findOneAndUpdate({
+        _id: taskId, user: data.user
+    }, data, {
+        returnDocument: "after", runValidators: true
+    });
+    if (!updated) throw { status: 403, message: "No Access!" };
+    return updated;
+}
+
+
 module.exports = {
     createTaskService,
     getAllTasksService,
-    getTaskByIdService
+    getTaskByIdService,
+    updateTaskByIdService
 }
