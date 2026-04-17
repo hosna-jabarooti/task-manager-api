@@ -33,7 +33,7 @@ async function loginService(data) {
         { expiresIn: '1d' }
     );
 
-    return { token };
+    return token;
 };
 
 module.exports = {

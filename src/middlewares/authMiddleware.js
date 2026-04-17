@@ -4,7 +4,7 @@ function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader)
-        res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ message: "Unauthorized" });
 
     const token = authHeader.split(" ")[1];
     try {
@@ -17,4 +17,4 @@ function authMiddleware(req, res, next) {
     }
 };
 
-module.exports =  authMiddleware;
+module.exports = authMiddleware;
