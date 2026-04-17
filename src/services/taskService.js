@@ -32,20 +32,27 @@ async function getTaskByIdService(taskId) {
 
 async function updateTaskByIdService(taskId, data) {
     const existing = await Task.findById(taskId).lean();
-    if (!existing) throw { status: 404, message: "No such product exists" };
+    if (!existing) throw { status: 404, message: "No such task exists" };
     const updated = await Task.findOneAndUpdate({
         _id: taskId, user: data.user
     }, data, {
         returnDocument: "after", runValidators: true
     });
-    if (!updated) throw { status: 403, message: "No Access!" };
+    // if (!updated) throw { status: 403, message: "No Access!" };
     return updated;
 }
 
-
+async function deleteTaskByIdService(taskId, userId) {
+    const existing = await Task.findById(taskId).lean();
+    if (!existing) throw { status: 404, message: "No such task exists" };
+    return await Task.findOneAndDelete({
+        _id: taskId, user: userId
+    });
+}
 module.exports = {
     createTaskService,
     getAllTasksService,
     getTaskByIdService,
-    updateTaskByIdService
+    updateTaskByIdService,
+    deleteTaskByIdService
 }

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const { createTaskSchema, updateTaskSchema } = require('../validators/taskValidator');
 const { createTaskService, getAllTasksService,
-    getTaskByIdService, updateTaskByIdService
+    getTaskByIdService, updateTaskByIdService,
+    deleteTaskByIdService
 } = require('../services/taskService');
 
 async function createTaskController(req, res) {
@@ -63,8 +64,26 @@ async function updateTaskByIdController(req, res) {
             err.status = 400;
             throw err;
         }
-        await updateTaskByIdService(taskId, data);
+        const result = await updateTaskByIdService(taskId, data);
+        if (!result) throw { status: 403, message: "No Access!" };
         res.json("the task updated successfully");
+    } catch (err) {
+        res.status(err.status || 500).json(err.message || "Internal server Error");
+    }
+}
+
+async function deleteTaskByIdController(req, res) {
+    try {
+        const taskId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(taskId)) {
+            const err = new Error("Invalid task id format");
+            err.status = 400;
+            throw err;
+        }
+        const userId = req.user.userId;
+        const result = await deleteTaskByIdService(taskId, userId);
+        if (!result) throw { status: 403, message: "No Access!" };
+        res.json("task deleted successfully!");
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
     }
@@ -73,5 +92,6 @@ module.exports = {
     createTaskController,
     getAllTasksController,
     getTaskByIdController,
-    updateTaskByIdController
+    updateTaskByIdController,
+    deleteTaskByIdController
 };
