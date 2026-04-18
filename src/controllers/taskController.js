@@ -5,7 +5,7 @@ const { createTaskService, getAllTasksService,
     deleteTaskByIdService
 } = require('../services/taskService');
 
-async function createTaskController(req, res) {
+async function createTaskController(req, res, next) {
     const data = req.body;
     const userId = req.user.userId;
     try {
@@ -17,11 +17,11 @@ async function createTaskController(req, res) {
         await createTaskService(data, userId);
         res.status(201).json({ message: "new task created successfully!" });
     } catch (err) {
-        res.status(err.status || 500).json(err.message || "Internal server Error");
+        next(err);
     }
 }
 
-async function getAllTasksController(req, res) {
+async function getAllTasksController(req, res, next) {
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 5;
@@ -35,11 +35,11 @@ async function getAllTasksController(req, res) {
         const tasks = await getAllTasksService(page, limit, filters);
         res.json(tasks);
     } catch (err) {
-        res.status(err.status || 500).json(err.message || "Internal server Error");
+        next(err);
     }
 }
 
-async function getTaskByIdController(req, res) {
+async function getTaskByIdController(req, res, next) {
     try {
         const taskId = req.params.id;
         const userId = req.user.userId;
@@ -51,11 +51,11 @@ async function getTaskByIdController(req, res) {
         const result = await getTaskByIdService(taskId, userId);
         res.json(result);
     } catch (err) {
-        res.status(err.status || 500).json(err.message || "Internal server Error");
+        next(err);
     }
 }
 
-async function updateTaskByIdController(req, res) {
+async function updateTaskByIdController(req, res, next) {
     const data = req.body;
     const userId = req.user.userId;
     try {
@@ -72,11 +72,11 @@ async function updateTaskByIdController(req, res) {
         await updateTaskByIdService(taskId, data, userId);
         res.json("the task updated successfully");
     } catch (err) {
-        res.status(err.status || 500).json(err.message || "Internal server Error");
+        next(err);
     }
 }
 
-async function deleteTaskByIdController(req, res) {
+async function deleteTaskByIdController(req, res, next) {
     try {
         const taskId = req.params.id;
         if (!mongoose.Types.ObjectId.isValid(taskId)) {
@@ -88,7 +88,7 @@ async function deleteTaskByIdController(req, res) {
         await deleteTaskByIdService(taskId, userId);
         res.json("task deleted successfully!");
     } catch (err) {
-        res.status(err.status || 500).json(err.message || "Internal server Error");
+        next(err);
     }
 }
 module.exports = {
