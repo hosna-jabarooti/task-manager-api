@@ -26,6 +26,12 @@ async function getAllTasksController(req, res) {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 5;
         const filters = { user: req.user.userId };
+        if (req.query.search)
+            filters.title = { $regex: `^${req.query.search}`, $options: 'i' };
+
+        if (req.query.completed)
+            filters.completed = req.query.completed === 'true';
+
         const tasks = await getAllTasksService(page, limit, filters);
         res.json(tasks);
     } catch (err) {
