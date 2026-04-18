@@ -7,14 +7,14 @@ const { createTaskService, getAllTasksService,
 
 async function createTaskController(req, res) {
     const data = req.body;
+    const userId = req.user.userId;
     try {
         if (!data) throw { status: 400, message: "empty data" };
-        data.user = req.user.userId;
         const { error } = createTaskSchema.validate(data);
         if (error)
             return res.status(400).json({ message: error.details[0].message });
 
-        await createTaskService(data);
+        await createTaskService(data, userId);
         res.status(201).json({ message: "new task created successfully!" });
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
@@ -42,8 +42,7 @@ async function getTaskByIdController(req, res) {
             err.status = 400;
             throw err;
         }
-        const result = await getTaskByIdService(taskId);
-        if (result.user.toString() !== userId) throw { status: 403, message: "No Access!" };
+        const result = await getTaskByIdService(taskId, userId);
         res.json(result);
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
@@ -52,9 +51,9 @@ async function getTaskByIdController(req, res) {
 
 async function updateTaskByIdController(req, res) {
     const data = req.body;
+    const userId = req.user.userId;
     try {
         if (!data || !Object.keys(data).length) throw { status: 400, message: "empty data" };
-        data.user = req.user.userId;
         const { error } = updateTaskSchema.validate(data);
         if (error)
             return res.status(400).json({ message: error.details[0].message });
@@ -64,8 +63,7 @@ async function updateTaskByIdController(req, res) {
             err.status = 400;
             throw err;
         }
-        const result = await updateTaskByIdService(taskId, data);
-        if (!result) throw { status: 403, message: "No Access!" };
+        await updateTaskByIdService(taskId, data, userId);
         res.json("the task updated successfully");
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
@@ -81,8 +79,7 @@ async function deleteTaskByIdController(req, res) {
             throw err;
         }
         const userId = req.user.userId;
-        const result = await deleteTaskByIdService(taskId, userId);
-        if (!result) throw { status: 403, message: "No Access!" };
+        await deleteTaskByIdService(taskId, userId);
         res.json("task deleted successfully!");
     } catch (err) {
         res.status(err.status || 500).json(err.message || "Internal server Error");
